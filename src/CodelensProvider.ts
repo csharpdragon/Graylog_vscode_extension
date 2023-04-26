@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { ConnectionPart } from './connectionpart';
+import { ConnectionPart } from './graylog';
 /**
  * CodelensProvider
  */
@@ -25,10 +25,10 @@ export class CodelensProvider implements vscode.CodeLensProvider {
                 this.codeLenses.push(new vscode.CodeLens(range));
             }
         });
-
         return this.codeLenses;
 	}
 
+    
 	public resolveCodeLens(codeLens: vscode.CodeLens, token: vscode.CancellationToken) {
         codeLens.command = {
             title: "Codelens provided by sample extension",

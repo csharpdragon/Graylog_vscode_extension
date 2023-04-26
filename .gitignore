@@ -1,3 +1,10 @@
+# vscode build files
+*/out/
+
+# Compiled vsix from local builds
+# Ideally, this will get published to the extension store
+*.vsix
+
 # Logs
 logs
 *.log
@@ -102,3 +109,16 @@ dist
 
 # TernJS port file
 .tern-port
+
+# test files
+src/test/
+src/test/suite/index.ts
+src/test/suite/index.ts
+src/test/suite/extension.test.ts
+src/test/runTest.ts
+
+#out files
+out/
+
+.js
+.mp

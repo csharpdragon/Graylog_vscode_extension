@@ -2,49 +2,126 @@
 
 import * as vscode from 'vscode';
 
-import { DepNodeProvider, Item } from './nodeDependencies';
-import { ConnectionPart } from './connectionpart';
+import { ConnectionPart } from './graylog';
 import {GraylogFileSystemProvider} from './fileSystemProvider';
-import { CodelensProvider } from './CodelensProvider';
+import {addColorSettings} from './utils';
+import { MyTreeItem } from './fileSystemProvider';
+
 const colorData = require('../themes/color');
-
-
 
 export function activate(context: vscode.ExtensionContext) {
 
+	addColorSettings(colorData);
+	
+	const graylog = new GraylogFileSystemProvider();
 
-	const Graylog = new GraylogFileSystemProvider();
-	
-	const connectpart= new ConnectionPart(Graylog,context.secrets);
-	
-	addColorSettings();
-	
-	context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', Graylog, { isCaseSensitive: true }));
-	let initialized = false;
+	const connectpart = new ConnectionPart(graylog,context.secrets);
 
+	context.subscriptions.push(vscode.workspace.registerFileSystemProvider('graylog', graylog, { isCaseSensitive: true }));
+	const treeview = vscode.window.createTreeView('graylog',{ treeDataProvider:graylog });	
+
+	context.subscriptions.push(vscode.commands.registerCommand('graylog.RefreshWorkSpace', async () => {
+		connectpart.refreshWorkspace();
+	}));
 	
-	context.subscriptions.push(vscode.commands.registerCommand('graylog.workspaceInit', async () => {
-		connectpart.clearworkspace();
+	context.subscriptions.push(vscode.commands.registerCommand('graylog.showCreateInputBox', async () => {
+		console.log('---------------');
 	}));
 
+	context.subscriptions.push(vscode.commands.registerCommand('graylog.treeItemClick',(item:MyTreeItem)=>{
+		graylog.onClickItem(item);
+	}));
 	
-	prepareForWork(connectpart,context.secrets);
+	context.subscriptions.push(vscode.commands.registerCommand('graylog.settingApiInfo', async () => {
+		await connectpart.initSettings();
+		connectpart.openSettings();
+	}));
+
+	context.subscriptions.push(vscode.commands.registerCommand( 'graylog.saveToLocal', (item:MyTreeItem) => {
+		connectpart.saveToLocalFolder(item);
+	}));
+
+	context.subscriptions.push(vscode.commands.registerCommand( 'graylog.saveContentPack', () => {
+		connectpart.saveActiveEditorContent();
+	}));
+
+	context.subscriptions.push( vscode.workspace.onDidSaveTextDocument((document)=>{
+		if(document.fileName.endsWith("contentPack.json")){ vscode.commands.executeCommand("graylog.saveContentPack"); }
+	}));
+
+	context.subscriptions.push(vscode.commands.registerCommand( 'graylog.createNewRule', async (item:MyTreeItem) => {
+		const value = await vscode.window.showInputBox({ prompt: 'Enter a value' });
+		if(value) {
+			connectpart.createNewRule( item, value);
+		}
+		// connectpart.createNewRule(item);
+	}));
+	
+
+	context.subscriptions.push(vscode.commands.registerCommand('graylog.selectInstances',async ()=>{
+		await connectpart.initSettings();
+		const items=[];
+		const quickItems = [];
+		if(connectpart.apis.serverList && connectpart.apis.serverList.length > 0)
+		{
+			for(let i=0;i<connectpart.apis.serverList.length ;i++){
+				items.push({
+					label: connectpart.apis.serverList[i]['serverUrl'],
+					index: i
+				});
+				quickItems.push(connectpart.apis.serverList[i]['serverUrl']);
+			}
+			const result = await vscode.window.showQuickPick(quickItems, { placeHolder: "Please select the server" });
+			const resultIndex = quickItems.findIndex((item)=> item === result);
+			  
+			if (result && resultIndex > -1) {
+				connectpart.clearworkspace({ label: result, index: resultIndex});
+			}
+		}
+	}));
+	
+	context.subscriptions.push(vscode.commands.registerCommand('graylog.MultiSelect', () => {
+		graylog.updateTreeViewMode();
+	}));
+
+	const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+	statusBarItem.show();
+
+	statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
+	context.subscriptions.push(vscode.commands.registerCommand('graylog.setStatusBar', (text: string) => {
+		statusBarItem.text = text;
+	}));
+
+	context.subscriptions.push(vscode.commands.registerCommand('graylog.exportToContext',async () => {
+		///action for export to content pack
+		await connectpart.createContentPack();
+		vscode.commands.executeCommand("graylog.MultiSelect");
+	}));
 
 	vscode.workspace.onDidChangeTextDocument((e)=>{
-		if(connectpart.apiUrl!="")
-			connectpart.onDidChange(e.document);
+		checkStatusBarShowing(e?.document.uri.scheme,statusBarItem);
+		connectpart.onDidChange(e?.document);
 	});
 	
 	vscode.window.onDidChangeActiveTextEditor(e=>{
-		if(connectpart.apiUrl!="" && e?.document)
+		checkStatusBarShowing(e?.document.uri.scheme,statusBarItem);
+
+		if(e?.document){
 			connectpart.onDidChange(e?.document);
+		}
 	});
 
+	vscode.window.onDidChangeVisibleTextEditors(event=>{
+		if(vscode.window.activeTextEditor){
+			checkStatusBarShowing(vscode.window.activeTextEditor?.document.uri.scheme,statusBarItem);
+		}
+		else { statusBarItem.hide(); }
+	});
 	vscode.workspace.onDidCreateFiles((e)=>{
 		e.files.map((file)=>{
 			let name = file.path.replace("/","").split('.')[0];
 			let extension = file.path.replace("/","").split('.')[1];
-			if(file.scheme == 'graylog' && extension == 'grule'){
+			if(file.scheme === 'graylog' && extension === 'grule'){
 				connectpart.createRule(name);
 			}
 		});
@@ -52,60 +129,14 @@ export function activate(context: vscode.ExtensionContext) {
 
 }
 
-async function prepareForWork(connectpart:ConnectionPart,secretStorage:vscode.SecretStorage){
 
-	if(vscode.workspace.workspaceFolders &&  vscode.workspace.workspaceFolders.length >0 && vscode.workspace.workspaceFolders[0].name == 'Graylog API')
-	{
-		connectpart.prepareForwork();
+
+function checkStatusBarShowing( scheme: string | undefined, item: vscode.StatusBarItem ){
+	if(!scheme) {
+		return;
 	}
 
-	if(await secretStorage.get("reloaded") == "yes"){
-		connectpart.LoginInitialize();
-	}
-	
+	if( scheme === 'graylog'){
+		item.show();
+	}else{ item.hide(); }
 }
-
-function addColorSettings() {
-	(async () => {
-		const config = vscode.workspace.getConfiguration() ;
-		let tokenColorCustomizations = config.inspect('editor.tokenColorCustomizations')?.globalValue;
-
-		const tokenColor = [];
-		const colorDataLength = colorData.length;
-		const tokenColorLength = tokenColor.length;
-
-		for (let i = 0; i < colorDataLength; i++) {
-			const name = colorData[i].name;
-
-			let exist = false;
-			for (let j = 0; j < tokenColorLength; j++) {
-				if (tokenColor[j].name === name) {
-					exist = true;
-					break;
-				}
-			}
-
-			if (!exist) {
-				tokenColor.push(colorData[i]);
-			}
-		}
-
-		await config.update(
-			'editor.tokenColorCustomizations',
-			tokenColorCustomizations,
-			vscode.ConfigurationTarget.Global,
-		);
-	})();
-}
-
-
-// "views": {
-// 	"package-explorer": [
-// 	  {
-// 		"id": "nodeDependencies",
-// 		"name": "Node Dependencies",
-// 		"icon": "media/dep.svg",
-// 		"contextualTitle": "Package Explorer"
-// 	  }
-// 	]
-//   },

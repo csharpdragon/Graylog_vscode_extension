@@ -1,146 +1,288 @@
 {
-  "name": "task-graylog",
-  "displayName": "Task_graylog",
-  "description": "",
-  "version": "0.0.1",
+  "name": "graylog-rules-manager",
+  "displayName": "Graylog Rules Manager",
+  "description": "This is extension assists with managing your Pipeline rules in a running Graylog instance.",
+  "icon": "media/logo.png",
+  "version": "0.0.8",
   "engines": {
     "vscode": "^1.76.0"
   },
-  "publisher": "pdragon",
+  "publisher": "Graylog-Labs",
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-		"onLanguage:grule"
-	],
   "main": "./out/extension.js",
+  
   "showLanguageModeIcons": true,
+
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "package-explorer",
+          "title": "Package Explorer",
+          "icon": "media/logo.svg"
+        }
+      ]
+    },
+    "views": {
+      "package-explorer": [
+        {
+          "id": "graylog",
+          "name": "Graylog",
+          "icon": "media/logo.svg",
+          "contextualTitle": "Graylog Explorer"
+        }
+      ]
+    },
     "commands": [
       {
-        "command": "graylog.workspaceInit",
-        "title": "Setup Workspace",
+        "command": "graylog.RefreshWorkSpace",
+        "title": "Reload remote rules",
+        "category": "Graylog",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "graylog.MultiSelect",
+        "title": "Toggle MultiSelect",
+        "category": "Graylog",
+        "icon": {
+          "light": "resources/checkbox-check.svg",
+          "dark": "resources/checkbox-check.svg"
+        }
+      },
+      {
+        "command": "graylog.settingApiInfo",
+        "title": "Settings",
+        "category": "Graylog",
+        "icon": {
+          "light": "resources/setting.svg",
+          "dark": "resources/setting.svg"
+        }
+      },
+      {
+        "command": "graylog.selectInstances",
+        "title": "Select Instances",
+        "category": "Graylog",
+        "icon": {
+          "light": "resources/multiselect-enable.svg",
+          "dark": "resources/multiselect-enable.svg"
+        }
+      },
+      {
+        "command": "graylog.exportToContext",
+        "title": "Export As context"
+      },
+      {
+        "command": "graylog.treeItemClick",
+        "title": "click"
+      },
+      {
+        "command": "graylog.saveToLocal",
+        "title": "Save rules to local folder"
+      },
+      {
+        "command": "graylog.createNewRule",
+        "title": "New Pipeline Rule",
         "category": "Graylog"
+      },
+      {
+        "command": "graylog.setStatusBar",
+        "title": "Status Bar"
+      },
+      {
+        "command": "graylog.saveContentPack",
+        "title": "Save ContentPack",
+        "category": "Graylog",
+        "icon": {
+          "light": "resources/light/save.svg",
+          "dark": "resources/dark/save.svg"
+        }
       }
     ],
+    "menus": {
+      "commandPalette":[
+        {
+					"command": "graylog.saveContentPack",
+          "title": "Save ContentPack",
+          "icon": {
+            "light": "resources/light/save.svg",
+            "dark": "resources/dark/save.svg"
+          },
+          "group": "navigation",
+          "when": "resourceScheme == graylog && resourceFilename == contentPack.json"
+				}
+      ],
+      "editor/title":[
+        {
+          "command": "graylog.saveContentPack",
+          "title": "Save ContentPack",
+          "group": "navigation",
+          "icon": {
+            "light": "resources/light/save.svg",
+            "dark": "resources/dark/save.svg"
+          },
+          "when": "resourceScheme == graylog && resourceFilename == contentPack.json"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "graylog.RefreshWorkSpace",
+          "group": "navigation",
+          "when": "view == graylog"
+        },
+        {
+          "command": "graylog.MultiSelect",
+          "group": "navigation",
+          "when": "view == graylog"
+        },
+        {
+          "command": "graylog.settingApiInfo",
+          "group": "navigation",
+          "when": "view == graylog"
+        },
+        {
+          "command": "graylog.selectInstances",
+          "group": "navigation",
+          "when": "view == graylog"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "graylog.exportToContext",
+          "when": "view == graylog && viewItem == treeItemContext"
+        },
+        {
+          "command": "graylog.saveToLocal",
+          "when": "view == graylog && viewItem == serverInstance"
+        },
+        {
+          "command": "graylog.createNewRule",
+          "when": "view == graylog && (viewItem == serverInstance || viewItem == folder)"
+        }
+      ]
+    },
     "languages": [
-		{
-			"id": "grule",
-			"icon":{
-				"light":"resources/icons8-earth-64.png",
-				"dark":"resources/icons8-earth-64.png"
-			},
-			"extensions": [
-				".grule"
-			],
-			"configuration": "language-configuration.json"
-		}
-		],
-		"grammars": [
-			{
-				"language": "grule",
-				"scopeName": "source.grule",
-				"path": "syntaxes/grule.tmLanguage.json"
-			}
-		],
-		"snippets": [
-			{
-				"language": "grule",
-				"path": "snippets/grule.code-snippets"
-			}
-		],
-    "colors": [
-			{
-				"id": "graylog.errorBackground",
-				"defaults": {
-					"dark": "#e454541b",
-					"light": "#e4545420",
-					"highContrast": "#e454541b"
-				},
-				"description": "Background color of the entire line containing error."
-			},
-			{
-				"id": "graylog.errorMessageBackground",
-				"defaults": {
-					"dark": "#e4545419",
-					"light": "#e4545419",
-					"highContrast": "#e4545419"
-				},
-				"description": "Background color of the error message."
-			},
-			{
-				"id": "graylog.errorBackgroundLight",
-				"defaults": {
-					"dark": "#e4545420",
-					"light": "#e4545420",
-					"highContrast": "#e4545420"
-				},
-				"description": "Background color of the entire line containing error (Only in light themes)."
-			},
-			{
-				"id": "graylog.errorForeground",
-				"defaults": {
-					"dark": "#ff6464",
-					"light": "#e45454",
-					"highContrast": "#ff6464"
-				},
-				"description": "Text color used to highlight lines containing errors."
-			},
-			{
-				"id": "graylog.errorForegroundLight",
-				"defaults": {
-					"dark": "#e45454",
-					"light": "#e45454",
-					"highContrast": "#e45454"
-				},
-				"description": "Text color used to highlight lines containing errors (Only in light themes)."
-			},
       {
-				"id": "errorLens.hintBackground",
-				"defaults": {
-					"dark": "#17a2a220",
-					"light": "#17a2a220",
-					"highContrast": "#17a2a220"
-				},
-				"description": "Background color used to highlight lines containing hints."
-			},
-			{
-				"id": "errorLens.hintMessageBackground",
-				"defaults": {
-					"dark": "#17a2a219",
-					"light": "#17a2a219",
-					"highContrast": "#17a2a219"
-				},
-				"description": "Background color of the hint message."
-			},
-			{
-				"id": "errorLens.hintBackgroundLight",
-				"defaults": {
-					"dark": "#17a2a220",
-					"light": "#17a2a220",
-					"highContrast": "#17a2a220"
-				},
-				"description": "Background color used to highlight lines containing hints (Only in light themes)."
-			},
-			{
-				"id": "errorLens.hintForeground",
-				"defaults": {
-					"dark": "#2faf64",
-					"light": "#2faf64",
-					"highContrast": "#2faf64"
-				},
-				"description": "Text color used to highlight lines containing hints."
-			},
-			{
-				"id": "errorLens.hintForegroundLight",
-				"defaults": {
-					"dark": "#2faf64",
-					"light": "#2faf64",
-					"highContrast": "#2faf64"
-				},
-				"description": "Text color used to highlight lines containing hints (Only in light themes)."
-			}
-		]
+        "id": "grule",
+        "icon": {
+          "light": "media/logo.png",
+          "dark": "media/logo.png"
+        },
+        "extensions": [
+          ".grule"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "grule",
+        "scopeName": "source.grule",
+        "path": "./syntaxes/grule.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "grule",
+        "path": "./snippets/grule.code-snippets"
+      }
+    ],
+    "colors": [
+      {
+        "id": "graylog.errorBackground",
+        "defaults": {
+          "dark": "#e454541b",
+          "light": "#e4545420",
+          "highContrast": "#e454541b"
+        },
+        "description": "Background color of the entire line containing error."
+      },
+      {
+        "id": "graylog.errorMessageBackground",
+        "defaults": {
+          "dark": "#e4545419",
+          "light": "#e4545419",
+          "highContrast": "#e4545419"
+        },
+        "description": "Background color of the error message."
+      },
+      {
+        "id": "graylog.errorBackgroundLight",
+        "defaults": {
+          "dark": "#e4545420",
+          "light": "#e4545420",
+          "highContrast": "#e4545420"
+        },
+        "description": "Background color of the entire line containing error (Only in light themes)."
+      },
+      {
+        "id": "graylog.errorForeground",
+        "defaults": {
+          "dark": "#ff6464",
+          "light": "#e45454",
+          "highContrast": "#ff6464"
+        },
+        "description": "Text color used to highlight lines containing errors."
+      },
+      {
+        "id": "graylog.errorForegroundLight",
+        "defaults": {
+          "dark": "#e45454",
+          "light": "#e45454",
+          "highContrast": "#e45454"
+        },
+        "description": "Text color used to highlight lines containing errors (Only in light themes)."
+      },
+      {
+        "id": "errorLens.hintBackground",
+        "defaults": {
+          "dark": "#17a2a220",
+          "light": "#17a2a220",
+          "highContrast": "#17a2a220"
+        },
+        "description": "Background color used to highlight lines containing hints."
+      },
+      {
+        "id": "errorLens.hintMessageBackground",
+        "defaults": {
+          "dark": "#17a2a219",
+          "light": "#17a2a219",
+          "highContrast": "#17a2a219"
+        },
+        "description": "Background color of the hint message."
+      },
+      {
+        "id": "errorLens.hintBackgroundLight",
+        "defaults": {
+          "dark": "#17a2a220",
+          "light": "#17a2a220",
+          "highContrast": "#17a2a220"
+        },
+        "description": "Background color used to highlight lines containing hints (Only in light themes)."
+      },
+      {
+        "id": "errorLens.hintForeground",
+        "defaults": {
+          "dark": "#2faf64",
+          "light": "#2faf64",
+          "highContrast": "#2faf64"
+        },
+        "description": "Text color used to highlight lines containing hints."
+      },
+      {
+        "id": "errorLens.hintForegroundLight",
+        "defaults": {
+          "dark": "#2faf64",
+          "light": "#2faf64",
+          "highContrast": "#2faf64"
+        },
+        "description": "Text color used to highlight lines containing hints (Only in light themes)."
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -166,7 +308,25 @@
   "dependencies": {
     "axios": "^1.3.4",
     "mkdirp": "^2.1.5",
-    "rimraf": "^4.4.0"
-  }
+    "moment": "^2.29.4",
+    "path": "^0.12.7",
+    "rimraf": "^4.4.0",
+    "ts-md5": "^1.3.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/graylog-labs/graylog-vscode-extension.git"
+  },
+  "keywords": [
+    "Graylog",
+    "Pipeline",
+    "Rules",
+    "Manager"
+  ],
+  "author": "Graylog Labs",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/graylog-labs/graylog-vscode-extension/issues"
+  },
+  "homepage": "https://github.com/graylog-labs/graylog-vscode-extension#readme"
 }
-
